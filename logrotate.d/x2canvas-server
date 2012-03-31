@@ -1,0 +1,12 @@
+/var/log/x2canvas/*.log {
+        weekly
+        missingok
+        rotate 12
+        compress
+        delaycompress
+        notifempty
+        sharedscripts
+        postrotate
+            /etc/init.d/x2canvas-server reload >/dev/null 2>&1;
+        endscript
+}
