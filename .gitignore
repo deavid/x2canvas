@@ -1,0 +1,4 @@
+libraries
+*~
+*.pyc
+config.ini
