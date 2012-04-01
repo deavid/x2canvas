@@ -1,0 +1,24 @@
+body {
+    background: #eef;
+    font-family: sans;
+}
+.header {
+    width: 700px;
+    margin: 0 auto;
+    /*background: #fff;
+    border-left: 1px solid #aaa;*/
+}
+
+.page {
+    width: 700px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #aaa;
+    padding: 4px;
+}
+
+.body {
+    min-height: 200px;
+    padding: 4px;
+}
+
