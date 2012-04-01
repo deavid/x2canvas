@@ -1,4 +1,40 @@
 #!/bin/bash
+# -------------- APP DIR DETECTION
+pushd . > /dev/null
+SCRIPT_PATH="${BASH_SOURCE[0]}";
+if ([ -h "${SCRIPT_PATH}" ]) then
+  while([ -h "${SCRIPT_PATH}" ]) do cd `dirname "$SCRIPT_PATH"`; SCRIPT_PATH=`readlink "${SCRIPT_PATH}"`; done
+fi
+cd `dirname ${SCRIPT_PATH}` > /dev/null
+SCRIPT_PATH=`pwd`;
+popd  > /dev/null
+# -------------- APP DIR DETECTION
 
+cd "$SCRIPT_PATH"
+echo $SCRIPT_PATH
 # Server for x2canvas
+SESSION_UUID=$(uuidgen)
+SESSION_PASSWD=$(uuidgen)
+GEOMETRY=1000x700x32
+DISPLAY=:30
+VNC_PORT=5900
+WEB_SOCKET_PORT=6100
+mkdir data
+mkdir data/ports
+mkdir data/sessions
+mkdir data/users
+mkdir data/displays
 
+Xvfb $DISPLAY -screen 0 $GEOMETRY -pixdepths 1,4,8,12,16,24,32 -shmem &
+XVFB_PID=$!
+
+export DISPLAY=$DISPLAY
+
+openbox &
+APP_PID=$!
+
+
+x11vnc -display $DISPLAY -many -speeds 50,150,50 -nowf -shared -passwd "$SESSION_PASSWD" -wait 15 -deferupdate 60 &
+VNC_PID=$!
+
+./utils/launch.sh --vnc 127.0.0.1:5900
