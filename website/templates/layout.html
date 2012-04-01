@@ -10,7 +10,13 @@
         </div>
         <div class="page">
             <div class="navigation">
-                <a href="{{ url_for('home') }}">Home</a> | <a href="{{ url_for('login') }}">Login</a>
+                <a href="{{ url_for('home') }}">Home</a> ... 
+                {% if session.logged_user %}
+                    logged in as {{ session.logged_user }} ( <a href="{{ url_for('logout') }}">Logout</a> )
+                {% else %}
+                    you are not logged in ( <a href="{{ url_for('login') }}">Login</a> )
+                {% endif %}
+                
             </div>
             <h1>{% block h1title %}Home{% endblock %}</h1>
             {% with flashes = get_flashed_messages() %}

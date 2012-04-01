@@ -1,21 +1,6 @@
-import sys, os, os.path
-# Determine current script directory
-SCRIPT_DIR = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
-LIBRARY_DIR = os.path.realpath(os.path.join(SCRIPT_DIR, "../libraries"))
-# Search for libraries . . . 
-LIBRARIES = []
-for dirname in sorted(os.listdir(LIBRARY_DIR)):
-    dirpath = os.path.join(LIBRARY_DIR,dirname)
-    if not os.path.isdir(dirpath): continue
-    LIBRARIES.append(dirpath)
-sys.path[:0] = LIBRARIES 
-# ;;
-
-## ============================================== 
-## ============================================== 
-## ============================================== 
-
-
+# encoding: UTF-8
+import sys, os.path
+import utils.whereami
 from flask import Flask, request, session, g, redirect, url_for
 from flask import abort, render_template, flash
 
@@ -41,10 +26,18 @@ def login():
         elif request.form['password'] != app.config['PASSWORD']:
             error = 'Invalid password'
         else:
-            session['logged_in'] = True
-            flash('You were logged in')
-            return redirect(url_for('home'))
+            session['logged_user'] = request.form['username'] 
+    if 'logged_user' in session:
+        flash('You were logged in')
+        return redirect(url_for('home'))
     return render_template('login.html', error=error)
+
+@app.route('/logout')
+def logout():
+    if 'logged_user' in session:
+        flash('You have been logged out')
+        del session['logged_user']
+    return redirect(url_for('login'))
 
 
 
