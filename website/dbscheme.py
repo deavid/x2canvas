@@ -1,5 +1,5 @@
 # encoding: UTF-8
-from utils.fsdb import Table, Field, Types
+from utils.fsdb import Table, Field, Types, Row
 
 class ListeningPorts(Table):
     name = 'listening_ports'
@@ -7,8 +7,11 @@ class ListeningPorts(Table):
         Field("port_number", Types.Integer),
     ]
     key = [
-        '%(port_number)d'
+        'listen-%(port_number)d'
     ]
+
+class ListeningPort(Row):
+    _table_class = ListeningPorts
 
 
 # Sessions
@@ -23,5 +26,8 @@ class Users(Table):
     key = [
         '%(name)s'
     ]
+
+class User(Row):
+    _table_class = Users
 
 

@@ -9,9 +9,9 @@ dbTemplate = utils.fsdb.DatabaseTemplate(dbscheme)
 
 db = dbTemplate.connect(DATABASE)
 
-admin_user = db.Users.create(name="admin")
-
-
+admin_user = db.Users.default(name="admin", password="password")
+print admin_user.password
+print admin_user
 db.close()
 
 
