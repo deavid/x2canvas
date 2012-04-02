@@ -1,16 +1,31 @@
 # encoding: UTF-8
 import sys, os.path
 import utils.whereami
+import utils.fsdb
+import dbscheme
 from flask import Flask, request, session, g, redirect, url_for
 from flask import abort, render_template, flash
 
 USERNAME = 'admin'
 PASSWORD = 'password'
 SECRET_KEY = 'development key'
-
+DATABASE = '../data'
 app = Flask(__name__)
 app.config.from_object(__name__)
 
+dbTemplate = utils.fsdb.DatabaseTemplate(dbscheme)
+
+@app.before_request
+def before_request():
+    """Make sure we are connected to the database each request."""
+    g.db = dbTemplate.connect(DATABASE)
+
+
+@app.teardown_request
+def teardown_request(exception):
+    """Closes the database again at the end of the request."""
+    if hasattr(g, 'db'):
+        g.db.close()
 
 
 @app.route("/")

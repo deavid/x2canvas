@@ -10,3 +10,8 @@ for dirname in sorted(os.listdir(LIBRARY_DIR)):
     LIBRARIES.append(dirpath)
 sys.path[:0] = LIBRARIES 
 # ;;
+
+def realdir(*args):
+    global SCRIPT_DIR
+    path1 = os.path.join(SCRIPT_DIR, *args)
+    return os.path.realpath(path1)
