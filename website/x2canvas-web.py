@@ -3,6 +3,8 @@ import sys, os.path
 import utils.whereami
 import utils.fsdb
 import dbscheme
+from utils import passwords
+
 from flask import Flask, request, session, g, redirect, url_for
 from flask import abort, render_template, flash
 
@@ -36,14 +38,15 @@ def home():
 def login():
     error = None
     if request.method == 'POST':
-        if request.form['username'] != app.config['USERNAME']:
+        user = g.db.Users.read(name = request.form['username'])
+        if user is None:
             error = 'Invalid username'
-        elif request.form['password'] != app.config['PASSWORD']:
+        elif not passwords.check(user.password,request.form['password']):
             error = 'Invalid password'
         else:
             session['logged_user'] = request.form['username'] 
     if 'logged_user' in session:
-        flash('You were logged in')
+        flash('You have been logged in')
         return redirect(url_for('home'))
     return render_template('login.html', error=error)
 
