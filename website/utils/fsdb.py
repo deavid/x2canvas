@@ -1,10 +1,13 @@
 # encoding: UTF-8
 from utils.whereami import realdir
-import os
+import os, re
 import os.path
 # FileSystem Database driver...
 # Simple wrapper that reads and writes confgurations in a fashion that bash can 
 # easily read the values later.
+
+class RowDoesNotExistError(Exception):
+    "Exception triggered when trying to get a row which doesn't exist yet."
 
 class DatabaseTemplate(object):
     def __init__(self, Schema):
@@ -47,14 +50,28 @@ class TableWrapper(object):
         return row
         
     def read(self, **kwargs):
-        row = self._table.create_row(data = kwargs, mode = "read")
-        return row
+        try:
+            row = self._table.create_row(data = kwargs, mode = "read")
+            return row
+        except RowDoesNotExistError:
+            return None
         
     def default(self, **kwargs):
         row = self._table.create_row(data = kwargs, mode = "default")
         return row
         
+    def items(self, **kwargs):
+        iterator = self._table.items()
+        return iterator
+    
         
+def dirname_sanitize(dirname):
+    dirname = str(dirname).lower()
+    if re.match("[0-9]",dirname[0]): dirname = "n" + dirname
+    if re.match("[^\w]",dirname[0]): dirname = "o" + dirname
+    dirname = re.sub('[^\w0-9]+','-',dirname)
+    assert(re.match("^[\w\d]+$",dirname))
+    return dirname
 
 class Table(object):
     name = 'defaulttablename'
@@ -68,6 +85,7 @@ class Table(object):
 
     def __init__(self, dbpath):
         self._path = realdir(dbpath, self.name)
+        if not os.path.exists(self._path): os.mkdir(self._path)
         if not os.path.isdir(self._path): raise ValueError, "Path is not a directory"
     def path(self, *args):
         return os.path.join(self._path, *args)
@@ -76,8 +94,18 @@ class Table(object):
         row = self._row_class(self, data = data, mode = mode)
         return row
         
+    def items(self):
+        for root, dirs, files in os.walk(self._path):
+            if len(files) and not len(dirs):
+                text_pk = os.path.relpath(root,self._path)
+                pk = []
+                while text_pk:
+                    text_pk, tail = os.path.split(text_pk)
+                    pk.append(tail)
+                yield self._row_class(self, pk = pk, mode = "read")
+        
     def pk(self, data):
-        return [ k % data for k in self.key ]
+        return [ dirname_sanitize(k % data) for k in self.key ]
 
 class RowMetaclass(type):
     def __init__(cls, name, bases, dct):
@@ -103,6 +131,8 @@ class Row(object):
         if pk is None:
             assert(data)
             pk = table.pk(data)
+        else:
+            assert(pk)
         self._pk = pk
         self._path = table.path(*pk)
         if data:
@@ -111,20 +141,27 @@ class Row(object):
             else:
                 if mode == "create":
                     raise ValueError("Value %s already exists!" % repr(pk))
-        if not os.path.isdir(self._path): raise ValueError, "Path is not a directory"
+        if not os.path.isdir(self._path): 
+            raise RowDoesNotExistError, "This row doesn't exist in the disk."
         self.table = table
         # Read table fields and setup properties for each one.
-        for field in self.table.fields:
-            if field.name in data: 
-                if mode == "default":
-                    if field.getrow(self) is not None:
-                        del data[field.name]
-                        continue
-                field.setrow(self, data[field.name])
-                del data[field.name]
+        if data:
+            for field in self.table.fields:
+                if field.name in data: 
+                    if mode == "default":
+                        if field.getrow(self) is not None:
+                            del data[field.name]
+                            continue
+                    field.setrow(self, data[field.name])
+                    del data[field.name]
         if data:
             print "WARN: The following data was not written:", data
             
+    def delete(self):
+        for field in self.table.fields:
+            field.delrow(self)
+        os.rmdir(self._path)
+        
     def path(self, *args):
         return os.path.join(self._path, *args)
 

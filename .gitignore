@@ -2,3 +2,4 @@ libraries
 *~
 *.pyc
 config.ini
+data
