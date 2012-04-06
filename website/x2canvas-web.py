@@ -1,10 +1,12 @@
 # encoding: UTF-8
 import sys, os.path
-import utils.whereami
+sys.path.insert(0,"..")
+from config import Config
+import utils.whereami 
 import utils.fsdb
 import dbscheme
 import json
-import threading
+import threading 
 import subprocess
 import time
 import random
@@ -13,7 +15,7 @@ from base64 import b64encode
 from Queue import Queue, Empty
 from utils import passwords
 
-from flask import Flask, request, session, g, redirect, url_for
+from flask import Flask, request, session, g, redirect, url_for, Response
 from flask import abort, render_template, flash
 
 USERNAME = 'admin'
@@ -155,6 +157,10 @@ class Connection:
         """
     def validate(self):
         assert(self.xvfb)
+        if self.ready:
+            ret = self.x11vnc.popen.poll()
+            if ret is not None: raise ValueError, "vnc terminated"
+            
         
     def _thread(self):
         
@@ -170,7 +176,7 @@ class Connection:
             ],
             
             )
-        time.sleep(3)
+        time.sleep(1)
         
         # DISPLAY=:30; openbox
         self.openbox = ExternalProcess(
@@ -198,7 +204,7 @@ class Connection:
                     "--vnc", "127.0.0.1:%d" % self.vncport,
                 ],
             )
-        time.sleep(3)
+        time.sleep(1)
         self.ready = True
 
 class ExternalProcess(object):
@@ -249,12 +255,23 @@ def logo():
     return redirect(url_for('static', filename='images/icon.png'))
 
 
-@app.route("/include/<path:filename>")
+@app.route("/include/<filename>")
 def novncinclude(filename):
-    return redirect(url_for('static', filename='novnc-include/' + filename))
+    mimetype = "text/html"
+    if filename.endswith(".css"):
+        mimetype = "text/css"
+    elif filename.endswith(".js"):
+        mimetype = "text/javascript"
+        
+    response = Response(response = open(os.path.join(Config.Global.novnc,"include",filename)).read()
+            #        , status=None, headers=None, mimetype=None, content_type=None, direct_passthrough=False
+            , content_type=mimetype)
+            
+    return response
+    # return redirect(url_for('static', filename='novnc-include/' + filename))
 
 if __name__ == "__main__":
     if '--debug' in sys.argv:
         app.debug = True
-    app.run()
+    app.run(host="0.0.0.0")
     

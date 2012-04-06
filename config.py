@@ -7,7 +7,7 @@ config_filelist = ['config.ini']
 
 class ConfigGlobal(AutoConfigTemplate):
     """
-    noVNCPath=string:libraries/noVNC
+    novnc=string:libraries/noVNC
     """
         
 

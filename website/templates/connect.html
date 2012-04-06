@@ -17,7 +17,7 @@ function parse_json_query(data) {
         $("#log").append(data.html);
     }
     if (data.ready) {
-        window.location.href = '/vnc?host=127.0.0.1&port=' + data.port + "&password="+data.passwd;
+        window.location.href = '/vnc?host=' + window.location.hostname + '&port=' + data.port + "&password="+data.passwd;
     }
 }
 
