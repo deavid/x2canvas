@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+{% block pagetitle %}connect{% endblock %}
+{% block h1title %}Connect{% endblock %}
+{% block body %}
+<script>
+var status_interval = 0
+$(document).ready(function() {
+   $("#log").append("<p>Page ready.</p>");
+   status_interval = setInterval("get_status()",250);
+ });
+ 
+function get_status() {
+    $.getJSON('/json-query/connection/status', {}, parse_json_query);
+}
+function parse_json_query(data) {
+    if (data.html) {
+        $("#log").append(data.html);
+    }
+    if (data.ready) {
+        window.location.href = '/vnc?host=127.0.0.1&port=' + data.port + "&password="+data.passwd;
+    }
+}
+
+</script>
+<input type="submit" id="#connect" onclick="get_status()" value="Connect Now" />
+<input type="submit" id="#stop" onclick="clearInterval(status_interval)" value="Stop polling" />
+<div class="window" id="log">
+</div>
+{% endblock %}

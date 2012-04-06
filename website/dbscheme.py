@@ -31,3 +31,18 @@ class User(Row):
     _table_class = Users
 
 
+
+class Properties(Table):
+    name = 'properties'
+    fields = [
+        Field("name", Types.String),
+        Field("value", Types.String),
+    ]
+    key = [
+        'key-%(name)s'
+    ]
+
+class Property(Row):
+    _table_class = Properties
+
+
